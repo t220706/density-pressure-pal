@@ -18,13 +18,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Tải video thí nghiệm Khối lượng riêng và Áp suất, AI nhận diện thí nghiệm, trích dữ liệu, tính toán và tạo báo cáo cho học sinh lớp 8.",
+          "Tải video thí nghiệm chủ đề Áp suất (KHTN 8), AI nhận diện thí nghiệm, trích dữ liệu, tính toán và tạo báo cáo cho học sinh lớp 8.",
       },
       { property: "og:title", content: "Trợ lý AI phân tích video thí nghiệm KHTN 8" },
       {
         property: "og:description",
         content:
-          "Phân tích video thí nghiệm khối lượng riêng và áp suất: quan sát, dữ liệu, công thức, phép tính, báo cáo và câu hỏi luyện tập.",
+          "Phân tích video thí nghiệm áp suất: quan sát, dữ liệu, công thức, phép tính, báo cáo và câu hỏi luyện tập.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -76,7 +76,7 @@ function Index() {
   const [userNote, setUserNote] = useState("");
   const [question, setQuestion] = useState("");
   const [rows, setRows] = useState<MeasurementRow[]>([
-    { id: "1", name: "Khối lượng", symbol: "m", value: "", unit: "g" },
+    { id: "1", name: "Lực ép", symbol: "F", value: "", unit: "N" },
   ]);
 
   async function onPick(f: File | null) {
@@ -171,8 +171,8 @@ function Index() {
             Trợ lý AI phân tích video thí nghiệm
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Chủ đề: Khối lượng riêng và Áp suất. AI mô tả hiện tượng, trích dữ liệu, chọn công
-            thức, tính toán và tạo báo cáo — không tự bịa số liệu.
+            Chủ đề: Áp suất. AI mô tả hiện tượng, trích dữ liệu, chọn công thức, tính toán và tạo
+            báo cáo — không tự bịa số liệu.
           </p>
         </div>
       </header>
@@ -289,12 +289,12 @@ function Index() {
             </div>
             <div className="mt-3">
               <span className={label}>Câu hỏi của em</span>
-              <input
-                className={input}
-                placeholder="Vì sao vật chìm? / Tính khối lượng riêng giúp em."
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-              />
+                <input
+                  className={input}
+                  placeholder="Ví dụ: Vì sao mũi đinh nhọn dễ đâm vào gỗ hơn?"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                />
             </div>
           </section>
 

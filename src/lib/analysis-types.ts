@@ -1,16 +1,12 @@
 import { z } from "zod";
 
 export const EXPERIMENT_CODES = [
-  "EXP-01",
-  "EXP-02",
   "EXP-03",
   "EXP-04",
   "EXP-05",
 ] as const;
 
 export const EXPERIMENT_LABELS: Record<string, string> = {
-  "EXP-01": "Vật nổi, chìm, lơ lửng",
-  "EXP-02": "Xác định khối lượng riêng của vật rắn",
   "EXP-03": "Áp suất do lực tác dụng",
   "EXP-04": "Áp suất chất lỏng theo độ sâu",
   "EXP-05": "Video ngoài phạm vi",
