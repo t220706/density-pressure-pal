@@ -63,7 +63,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
           fetch: runIdFetch.fetch,
         });
     const modelId = useOpenAI
-      ? process.env["AI_MODEL"] || "gpt-4.1-mini"
+      ? process.env["AI_MODEL"] || "gpt-5-mini"
       : "openai/gpt-6-astra";
 
     const measurementText = data.measurements.length
