@@ -61,7 +61,7 @@ function QuizQuestion({
 }: {
   q: Analysis["questions"][number];
   index: number;
-  selected?: string;
+  selected?: string | undefined;
   onSelect: (label: string) => void;
 }) {
   const answered = selected !== undefined;
