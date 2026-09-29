@@ -46,16 +46,25 @@ const InputSchema = z.object({
 export const analyzeExperiment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const key = process.env["LOVABLE_API_KEY"];
-    if (!key) throw new Error("Thiếu cấu hình AI (LOVABLE_API_KEY).");
+    // On Vercel: set OPENAI_API_KEY (and optionally AI_MODEL). On Lovable: LOVABLE_API_KEY is used.
+    const openaiKey = process.env["OPENAI_API_KEY"];
+    const lovableKey = process.env["LOVABLE_API_KEY"];
+    const key = openaiKey || lovableKey;
+    if (!key) throw new Error("Thiếu khóa AI. Hãy thêm OPENAI_API_KEY vào biến môi trường.");
 
+    const useOpenAI = Boolean(openaiKey);
     const runIdFetch = createLovableAiGatewayRunIdFetch();
-    const lovable = createOpenAI({
-      baseURL: "https://ai.gateway.lovable.dev/v1",
-      apiKey: key,
-      headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-      fetch: runIdFetch.fetch,
-    });
+    const lovable = useOpenAI
+      ? createOpenAI({ apiKey: key })
+      : createOpenAI({
+          baseURL: "https://ai.gateway.lovable.dev/v1",
+          apiKey: key,
+          headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+          fetch: runIdFetch.fetch,
+        });
+    const modelId = useOpenAI
+      ? process.env["AI_MODEL"] || "gpt-5-mini"
+      : "openai/gpt-6-astra";
 
     const measurementText = data.measurements.length
       ? data.measurements
@@ -81,7 +90,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
       .join("\n");
 
     const result = streamText({
-      model: lovable.responses("openai/gpt-6-astra"),
+      model: lovable.responses(modelId),
       system: SYSTEM_PROMPT,
       output: Output.object({ schema: analysisSchema }),
       messages: [
