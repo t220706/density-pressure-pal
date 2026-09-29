@@ -67,11 +67,15 @@ export function buildReport(a: Analysis, meta: { name: string; goal: string }) {
     a.warnings.forEach((w) => lines.push(`- ⚠️ ${w}`));
   }
   lines.push("");
-  lines.push(`## 10. Câu hỏi luyện tập`);
-  lines.push(`| Câu hỏi | Đáp án / Gợi ý |`);
-  lines.push(`|---|---|`);
-  a.questions.forEach((q) => lines.push(`| ${q.question} | ${q.answer_or_hint} |`));
-  lines.push("");
+  lines.push(`## 10. Câu hỏi trắc nghiệm luyện tập`);
+  a.questions.forEach((q, i) => {
+    lines.push(
+      `**Câu ${i + 1}** (${q.type === "tinh_toan" ? "Tính toán" : "Định tính"}): ${q.question}`,
+    );
+    q.options.forEach((o) => lines.push(`- ${o.label}. ${o.text}`));
+    lines.push(`- **Đáp án đúng:** ${q.correct_label} — ${q.explanation}`);
+    lines.push("");
+  });
   lines.push(
     `_Lưu ý: Kết quả do AI tạo sinh. Hãy đối chiếu với số đo thực tế và hướng dẫn của giáo viên._`,
   );

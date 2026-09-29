@@ -53,6 +53,57 @@ function Pill({ children, tone = "muted" }: { children: React.ReactNode; tone?: 
   );
 }
 
+function QuizQuestion({
+  q,
+  index,
+  selected,
+  onSelect,
+}: {
+  q: Analysis["questions"][number];
+  index: number;
+  selected?: string | undefined;
+  onSelect: (label: string) => void;
+}) {
+  const answered = selected !== undefined;
+  const isRight = selected === q.correct_label;
+  return (
+    <div className="rounded-md border border-border p-3">
+      <p className="text-sm font-medium">
+        {index + 1}. {q.question}{" "}
+        <Pill>{q.type === "tinh_toan" ? "Tính toán" : "Định tính"}</Pill>
+      </p>
+      <div className="mt-2 grid gap-1.5">
+        {q.options.map((opt) => {
+          const isCorrect = opt.label === q.correct_label;
+          const isPicked = selected === opt.label;
+          let cls = "border-border hover:bg-muted";
+          if (answered && isCorrect) cls = "border-primary bg-primary/10 font-medium text-primary";
+          else if (answered && isPicked)
+            cls = "border-destructive bg-destructive/10 text-destructive";
+          else if (answered) cls = "border-border text-muted-foreground";
+          return (
+            <button
+              key={opt.label}
+              type="button"
+              disabled={answered}
+              onClick={() => onSelect(opt.label)}
+              className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${cls}`}
+            >
+              <span className="font-semibold">{opt.label}.</span> {opt.text}
+            </button>
+          );
+        })}
+      </div>
+      {answered && (
+        <p className={`mt-2 text-sm font-medium ${isRight ? "text-primary" : "text-destructive"}`}>
+          {isRight ? "✅ Chính xác! " : `❌ Chưa đúng — đáp án là ${q.correct_label}. `}
+          <span className="font-normal text-foreground">{q.explanation}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Index() {
   const analyze = useServerFn(analyzeExperiment);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -65,6 +116,7 @@ function Index() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<Analysis | null>(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [feedback, setFeedback] = useState<string>("");
   const [note, setNote] = useState("");
 
@@ -82,6 +134,7 @@ function Index() {
   async function onPick(f: File | null) {
     setError("");
     setResult(null);
+    setAnswers({});
     setFrames([]);
     if (!f) return;
     if (!/\.(mp4|mov|webm)$/i.test(f.name) && !f.type.startsWith("video/")) {
@@ -119,6 +172,7 @@ function Index() {
     setBusy(true);
     setError("");
     setResult(null);
+    setAnswers({});
     setStatus("AI đang phân tích video và dữ liệu...");
     try {
       const out = await analyze({
@@ -152,6 +206,12 @@ function Index() {
   }
 
   const report = result ? buildReport(result, { name, goal }) : "";
+  const answeredCount = result
+    ? result.questions.filter((_, i) => answers[i] !== undefined).length
+    : 0;
+  const correctCount = result
+    ? result.questions.filter((q, i) => answers[i] === q.correct_label).length
+    : 0;
 
   function download() {
     const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
@@ -551,16 +611,26 @@ function Index() {
               </section>
 
               <section className={card}>
-                <h3 className="text-sm font-semibold">Câu hỏi luyện tập</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">Câu hỏi trắc nghiệm luyện tập</h3>
+                  {answeredCount > 0 && (
+                    <Pill tone={correctCount === answeredCount ? "ok" : "warn"}>
+                      Đã trả lời đúng {correctCount}/{answeredCount}
+                    </Pill>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Chọn một đáp án cho mỗi câu — em sẽ biết đúng/sai ngay và được giải thích.
+                </p>
                 <div className="mt-2 space-y-3">
                   {result.questions.map((q, i) => (
-                    <details key={i} className="rounded-md border border-border p-3">
-                      <summary className="cursor-pointer text-sm font-medium">
-                        {i + 1}. {q.question}{" "}
-                        <Pill>{q.type === "tinh_toan" ? "Tính toán" : "Định tính"}</Pill>
-                      </summary>
-                      <p className="mt-2 text-sm text-muted-foreground">{q.answer_or_hint}</p>
-                    </details>
+                    <QuizQuestion
+                      key={i}
+                      q={q}
+                      index={i}
+                      selected={answers[i]}
+                      onSelect={(label) => setAnswers((a) => ({ ...a, [i]: label }))}
+                    />
                   ))}
                 </div>
               </section>

@@ -73,7 +73,14 @@ export const analysisSchema = z.object({
     z.object({
       type: z.enum(["dinh_tinh", "tinh_toan"]),
       question: z.string(),
-      answer_or_hint: z.string(),
+      options: z.array(
+        z.object({
+          label: z.string(),
+          text: z.string(),
+        }),
+      ),
+      correct_label: z.string(),
+      explanation: z.string(),
     }),
   ),
 });
