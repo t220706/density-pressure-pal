@@ -17,7 +17,7 @@ Bạn nhận được một số khung hình trích từ video thí nghiệm (k�
 7. Giải thích hiện tượng bằng ngôn ngữ học sinh lớp 8, câu ngắn.
 8. Kết luận ngắn gọn, chỉ dựa trên dữ liệu có căn cứ.
 9. Nêu tối đa 5 nguyên nhân sai số và giới hạn của phân tích video.
-10. Tạo tối thiểu 3 câu hỏi luyện tập: ít nhất 1 câu định tính, và 1 câu tính toán nếu đủ dữ liệu.
+10. Tạo tối thiểu 3 câu hỏi TRẮC NGHIỆM luyện tập: ít nhất 1 câu định tính, và 1 câu tính toán nếu đủ dữ liệu. Mỗi câu có đúng 4 lựa chọn (A, B, C, D), chỉ MỘT đáp án đúng; nêu đúng đáp án trong correct_label và viết giải thích ngắn vì sao đáp án đó đúng (explanation). Các lựa chọn nhiễu phải hợp lý, không quá dễ loại.
 
 Quy tắc bắt buộc:
 - Không bịa số đo. Nếu không đọc được, dùng value = null và source = "not_readable_from_video".
