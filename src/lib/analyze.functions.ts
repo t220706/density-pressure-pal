@@ -101,7 +101,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
       .join("\n");
 
     const result = streamText({
-      model: lovable.responses(modelId),
+      model,
       system: SYSTEM_PROMPT,
       output: Output.object({ schema: analysisSchema }),
       messages: [
