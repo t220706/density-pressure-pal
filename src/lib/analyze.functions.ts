@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText, Output } from "ai";
 import { z } from "zod";
 import { analysisSchema } from "./analysis-types";
