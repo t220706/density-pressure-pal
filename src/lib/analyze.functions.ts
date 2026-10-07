@@ -118,15 +118,20 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
           ],
         },
       ],
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
+      // OpenAI-specific options; Gemini rejects these.
+      ...(gemini
+        ? {}
+        : {
+            providerOptions: {
+              openai: {
+                forceReasoning: true,
+                reasoningEffort: "low" as const,
+                reasoningSummary: "auto" as const,
+                store: false,
+                include: ["reasoning.encrypted_content"],
+              },
+            },
+          }),
     });
 
     return await result.output;
