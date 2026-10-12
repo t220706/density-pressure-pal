@@ -47,35 +47,37 @@ const InputSchema = z.object({
 export const analyzeExperiment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    // Priority: OPENAI_API_KEY > GEMINI_API_KEY (both for Vercel) > LOVABLE_API_KEY (Lovable hosting).
+    // Priority: OPENAI_API_KEY > XAI_API_KEY > GEMINI_API_KEY (Vercel) > LOVABLE_API_KEY (Lovable hosting).
     const openaiKey = process.env["OPENAI_API_KEY"];
+    const xaiKey = process.env["XAI_API_KEY"];
     const geminiKey = process.env["GEMINI_API_KEY"];
     const lovableKey = process.env["LOVABLE_API_KEY"];
-    const key = openaiKey || geminiKey || lovableKey;
+    const key = openaiKey || xaiKey || geminiKey || lovableKey;
     if (!key)
       throw new Error(
-        "Thiếu khóa AI. Hãy thêm OPENAI_API_KEY hoặc GEMINI_API_KEY vào biến môi trường.",
+        "Thiếu khóa AI. Hãy thêm OPENAI_API_KEY, XAI_API_KEY hoặc GEMINI_API_KEY vào biến môi trường.",
       );
 
     const useOpenAI = Boolean(openaiKey);
-    const useGemini = !useOpenAI && Boolean(geminiKey);
+    const useXai = !useOpenAI && Boolean(xaiKey);
+    const useGemini = !useOpenAI && !useXai && Boolean(geminiKey);
     const runIdFetch = createLovableAiGatewayRunIdFetch();
-    const lovable = useGemini
-      ? null
-      : useOpenAI
-        ? createOpenAI({ apiKey: key })
-        : createOpenAI({
-            baseURL: "https://ai.gateway.lovable.dev/v1",
-            apiKey: key,
-            headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-            fetch: runIdFetch.fetch,
-          });
     const gemini = useGemini ? createGoogleGenerativeAI({ apiKey: key }) : null;
+    const plainModel = !useOpenAI && (useXai || useGemini);
     const model = gemini
       ? gemini(process.env["AI_MODEL"] || "gemini-2.5-flash")
-      : lovable!.responses(
-          useOpenAI ? process.env["AI_MODEL"] || "gpt-5-mini" : "openai/gpt-6-astra",
-        );
+      : useXai
+        ? createOpenAI({ apiKey: key, baseURL: "https://api.x.ai/v1" }).chat(
+            process.env["AI_MODEL"] || "grok-4-fast",
+          )
+        : useOpenAI
+          ? createOpenAI({ apiKey: key }).responses(process.env["AI_MODEL"] || "gpt-5-mini")
+          : createOpenAI({
+              baseURL: "https://ai.gateway.lovable.dev/v1",
+              apiKey: key,
+              headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+              fetch: runIdFetch.fetch,
+            }).responses("openai/gpt-6-astra");
 
     const measurementText = data.measurements.length
       ? data.measurements
