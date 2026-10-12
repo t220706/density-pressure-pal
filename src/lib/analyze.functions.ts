@@ -68,7 +68,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
       ? gemini(process.env["AI_MODEL"] || "gemini-2.5-flash")
       : useXai
         ? createOpenAI({ apiKey: key, baseURL: "https://api.x.ai/v1" }).chat(
-            process.env["AI_MODEL"] || "grok-4-fast",
+            process.env["AI_MODEL"] || "grok-4.7",
           )
         : useOpenAI
           ? createOpenAI({ apiKey: key }).responses(process.env["AI_MODEL"] || "gpt-5-mini")
@@ -102,8 +102,13 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
       .filter(Boolean)
       .join("\n");
 
+    let streamError: unknown = null;
     const result = streamText({
       model,
+      onError: ({ error }) => {
+        streamError = error;
+        console.error("AI stream error:", error);
+      },
       system: SYSTEM_PROMPT,
       output: Output.object({ schema: analysisSchema }),
       messages: [
@@ -120,8 +125,8 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
           ],
         },
       ],
-      // OpenAI-specific options; Gemini rejects these.
-      ...(gemini
+      // OpenAI-specific options; Gemini and xAI reject these.
+      ...(plainModel
         ? {}
         : {
             providerOptions: {
@@ -136,5 +141,18 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
           }),
     });
 
-    return await result.output;
+    try {
+      return await result.output;
+    } catch (err) {
+      const real = streamError ?? err;
+      const msg = real instanceof Error ? real.message : String(real);
+      const lower = msg.toLowerCase();
+      if (lower.includes("credit") || lower.includes("spending") || lower.includes("balance"))
+        throw new Error("Tài khoản AI đã hết tiền/credit. Hãy nạp thêm rồi thử lại. (" + msg + ")");
+      if (lower.includes("api key") || lower.includes("unauthorized") || lower.includes("401"))
+        throw new Error("Khóa AI không hợp lệ hoặc đã bị xóa. Hãy kiểm tra lại khóa. (" + msg + ")");
+      if (lower.includes("model"))
+        throw new Error("Tên model AI không dùng được. Hãy kiểm tra biến AI_MODEL. (" + msg + ")");
+      throw new Error(msg);
+    }
   });
