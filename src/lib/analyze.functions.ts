@@ -47,38 +47,51 @@ const InputSchema = z.object({
 export const analyzeExperiment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    // Priority: OPENAI_API_KEY > XAI_API_KEY > GEMINI_API_KEY (Vercel) > LOVABLE_API_KEY (Lovable hosting).
+    // Priority: OpenAI > xai247 > xAI > Gemini > Lovable Gateway.
     const openaiKey = process.env["OPENAI_API_KEY"];
+    const xai247Key = process.env["XAI247_API_KEY"];
+    const xai247BaseUrl = process.env["XAI247_BASE_URL"]?.trim();
+    const xai247Model = process.env["XAI247_MODEL"]?.trim();
     const xaiKey = process.env["XAI_API_KEY"];
     const xaiBaseUrl = process.env["XAI_BASE_URL"] || "https://api.x.ai/v1";
     const geminiKey = process.env["GEMINI_API_KEY"];
     const lovableKey = process.env["LOVABLE_API_KEY"];
-    const key = openaiKey || xaiKey || geminiKey || lovableKey;
-    if (!key)
-      throw new Error(
-        "Thiếu khóa AI. Hãy thêm OPENAI_API_KEY, XAI_API_KEY hoặc GEMINI_API_KEY vào biến môi trường.",
-      );
 
     const useOpenAI = Boolean(openaiKey);
-    const useXai = !useOpenAI && Boolean(xaiKey);
-    const useGemini = !useOpenAI && !useXai && Boolean(geminiKey);
+    const useXai247 = !useOpenAI && Boolean(xai247Key);
+    const useXai = !useOpenAI && !useXai247 && Boolean(xaiKey);
+    const useGemini = !useOpenAI && !useXai247 && !useXai && Boolean(geminiKey);
+
+    if (useXai247 && !xai247BaseUrl)
+      throw new Error("Thiếu XAI247_BASE_URL. Hãy nhập Base URL chính xác theo tài liệu của nhà cung cấp.");
+    if (useXai247 && !xai247Model)
+      throw new Error("Thiếu XAI247_MODEL. Hãy nhập model ID được nhà cung cấp hỗ trợ.");
+
+    const key = openaiKey || xai247Key || xaiKey || geminiKey || lovableKey;
+    if (!key)
+      throw new Error(
+        "Thiếu khóa AI. Hãy cấu hình OPENAI_API_KEY, XAI247_API_KEY, XAI_API_KEY hoặc GEMINI_API_KEY.",
+      );
+
     const runIdFetch = createLovableAiGatewayRunIdFetch();
     const gemini = useGemini ? createGoogleGenerativeAI({ apiKey: key }) : null;
-    const plainModel = !useOpenAI && (useXai || useGemini);
+    const plainModel = !useOpenAI && (useXai247 || useXai || useGemini);
     const model = gemini
       ? gemini(process.env["AI_MODEL"] || "gemini-2.5-flash")
-      : useXai
-        ? createOpenAI({ apiKey: key, baseURL: xaiBaseUrl }).chat(
-            process.env["AI_MODEL"] || "grok-4.7",
-          )
-        : useOpenAI
-          ? createOpenAI({ apiKey: key }).responses(process.env["AI_MODEL"] || "gpt-5-mini")
-          : createOpenAI({
-              baseURL: "https://ai.gateway.lovable.dev/v1",
-              apiKey: key,
-              headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-              fetch: runIdFetch.fetch,
-            }).responses("openai/gpt-6-astra");
+      : useXai247
+        ? createOpenAI({ apiKey: key, baseURL: xai247BaseUrl! }).chat(xai247Model!)
+        : useXai
+          ? createOpenAI({ apiKey: key, baseURL: xaiBaseUrl }).chat(
+              process.env["AI_MODEL"] || "grok-4.7",
+            )
+          : useOpenAI
+            ? createOpenAI({ apiKey: key }).responses(process.env["AI_MODEL"] || "gpt-5-mini")
+            : createOpenAI({
+                baseURL: "https://ai.gateway.lovable.dev/v1",
+                apiKey: key,
+                headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+                fetch: runIdFetch.fetch,
+              }).responses("openai/gpt-6-astra");
 
     const measurementText = data.measurements.length
       ? data.measurements
