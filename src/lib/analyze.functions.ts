@@ -50,6 +50,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
     // Priority: OPENAI_API_KEY > XAI_API_KEY > GEMINI_API_KEY (Vercel) > LOVABLE_API_KEY (Lovable hosting).
     const openaiKey = process.env["OPENAI_API_KEY"];
     const xaiKey = process.env["XAI_API_KEY"];
+    const xaiBaseUrl = process.env["XAI_BASE_URL"] || "https://api.x.ai/v1";
     const geminiKey = process.env["GEMINI_API_KEY"];
     const lovableKey = process.env["LOVABLE_API_KEY"];
     const key = openaiKey || xaiKey || geminiKey || lovableKey;
