@@ -29,8 +29,10 @@ The build is preconfigured for Vercel (`nitro: { preset: "vercel" }` in `vite.co
 
 | Variable | Required | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | one of the two | OpenAI key (`sk-...`) from platform.openai.com |
-| `GEMINI_API_KEY` | one of the two | Google Gemini key from aistudio.google.com (free tier available) |
-| `AI_MODEL` | optional | Override the default model (`gpt-5-mini` for OpenAI, `gemini-2.5-flash` for Gemini) |
+| `OPENAI_API_KEY` | one of the three | OpenAI key (`sk-...`) from platform.openai.com |
+| `XAI_API_KEY` | one of the three | xAI (Grok) key from console.x.ai, or any OpenAI-compatible service |
+| `GEMINI_API_KEY` | one of the three | Google Gemini key from aistudio.google.com (free tier available) |
+| `XAI_BASE_URL` | optional | Custom OpenAI-compatible base URL for the xAI key (e.g. `https://xai247.xyz/v1`); defaults to `https://api.x.ai/v1` |
+| `AI_MODEL` | optional | Override the default model (`gpt-5-mini` for OpenAI, `grok-4.7` for xAI, `gemini-2.5-flash` for Gemini) |
 
-If both keys are set, OpenAI takes priority. On Lovable hosting none of these are needed — the built-in AI gateway is used automatically.
+If several keys are set, the priority is OpenAI → xAI → Gemini. On Lovable hosting none of these are needed — the built-in AI gateway is used automatically.
