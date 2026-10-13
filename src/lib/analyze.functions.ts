@@ -68,7 +68,7 @@ export const analyzeExperiment = createServerFn({ method: "POST" })
     const model = gemini
       ? gemini(process.env["AI_MODEL"] || "gemini-2.5-flash")
       : useXai
-        ? createOpenAI({ apiKey: key, baseURL: "https://api.x.ai/v1" }).chat(
+        ? createOpenAI({ apiKey: key, baseURL: xaiBaseUrl }).chat(
             process.env["AI_MODEL"] || "grok-4.7",
           )
         : useOpenAI
